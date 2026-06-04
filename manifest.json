@@ -1,6 +1,6 @@
 {
-  "name": "INTAGE Workspace Hub",
-  "short_name": "INTAGE Hub",
+  "name": "SAKE HUB",
+  "short_name": "SAKE HUB",
   "description": "INTAGE Workspace Hub for SSC, CATI Work Log, Audio Live, CATI AC System and Trade Simulator",
   "start_url": "./index.html",
   "scope": "./",
