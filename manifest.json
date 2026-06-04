@@ -1,7 +1,6 @@
 {
   "name": "SAKE HUB",
   "short_name": "SAKE HUB",
-  "description": "INTAGE Workspace Hub for SSC, CATI Work Log, Audio Live, CATI AC System and Trade Simulator",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -20,27 +19,27 @@
     {
       "name": "SSC",
       "short_name": "SSC",
-      "url": "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec?page=portal"
+      "url": "./viewer.html?app=ssc"
     },
     {
       "name": "CATI Work Log",
       "short_name": "CATI WL",
-      "url": "https://script.google.com/macros/s/AKfycby6ZdttmFk72VgBcg0xLAj98rUpGc1ZeNenx2hcRc54J8hMEEyGHyluCP1bacxwT70KZw/exec?page=admin"
+      "url": "./viewer.html?app=catiwl"
     },
     {
       "name": "Audio Live",
       "short_name": "Audio",
-      "url": "https://live-tran.netlify.app/"
+      "url": "./viewer.html?app=audio"
     },
     {
-      "name": "CATI AC System",
+      "name": "CATI AC",
       "short_name": "CATI AC",
-      "url": "https://script.google.com/macros/s/AKfycbzeseDPFxWlMf9R_HDgsQERPIOwKYQg5QBrGfIVXmKXNNF1jphevsv79InR6jHc4iTZ/exec"
+      "url": "./viewer.html?app=catiac"
     },
     {
-      "name": "Trade Simulator",
+      "name": "Trade",
       "short_name": "Trade",
-      "url": "./trade-simulator.html"
+      "url": "./viewer.html?app=trade"
     }
   ]
 }
