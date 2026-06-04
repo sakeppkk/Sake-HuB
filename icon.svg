@@ -19,6 +19,6 @@
   <circle cx="398" cy="122" r="104" fill="#FFFFFF" opacity=".48"/>
   <circle cx="118" cy="390" r="126" fill="#BFDBFE" opacity=".56"/>
   <rect x="82" y="88" width="348" height="336" rx="92" fill="#FFFFFF" opacity=".55" stroke="#FFFFFF" stroke-opacity=".9" filter="url(#shadow)"/>
-  <text x="256" y="270" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="132" font-weight="900" fill="url(#dark)">IN</text>
+  <text x="256" y="270" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="132" font-weight="900" fill="url(#dark)">S</text>
   <text x="256" y="326" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800" fill="#2563EB" opacity=".86">WORKSPACE</text>
 </svg>
