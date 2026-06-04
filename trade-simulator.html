@@ -1,0 +1,2328 @@
+﻿<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fibo Pullback Trade Simulator</title>
+  <style>
+    :root {
+      --bg: #10191e;
+      --ink: #e7edf1;
+      --muted: #8e9aa3;
+      --line: #2b3941;
+      --panel: #141f25;
+      --panel2: #1a272e;
+      --buy: #13a1ff;
+      --sell: #ff4d42;
+      --gold: #d7aa35;
+      --blue: #13a1ff;
+      --violet: #8d7cff;
+      --shadow: 0 12px 32px rgba(0, 0, 0, .28);
+    }
+
+    * { box-sizing: border-box; }
+
+    * {
+      scrollbar-color: #6f7d86 #152229;
+      scrollbar-width: thin;
+    }
+
+    *::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: #152229;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: #5f6e77;
+      border-radius: 999px;
+      border: 2px solid #152229;
+    }
+
+    *::-webkit-scrollbar-corner {
+      background: #152229;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .app {
+      height: 100vh;
+      width: 100vw;
+      display: grid;
+      grid-template-columns: 50px minmax(0, 1fr) 312px;
+      grid-template-rows: 52px minmax(0, 1fr) 132px;
+      gap: 1px;
+      background: var(--line);
+      overflow: hidden;
+    }
+
+    .platform-top {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 0 14px;
+      background: #111a20;
+      border-bottom: 1px solid #34444d;
+      min-width: 0;
+    }
+
+    .top-symbol-editor {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      height: 100%;
+    }
+
+    .symbol-badge {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      border-radius: 4px;
+      background: #0f171c;
+      border: 1px solid #334650;
+      color: #dce7ec;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .top-symbol-editor input {
+      width: min(220px, 45vw);
+      min-height: 34px;
+      border: 1px solid #334650;
+      border-radius: 4px;
+      background: #0f171c;
+      color: #fff;
+      padding: 6px 10px;
+      font-weight: 700;
+    }
+
+    .top-money {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid #334650;
+      border-radius: 4px;
+      background: #0f171c;
+      color: #cbd8de;
+      white-space: nowrap;
+    }
+
+    .top-money input {
+      width: 96px;
+      min-height: 28px;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      padding: 2px 0;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .account-strip {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #d7e0e6;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .deposit {
+      border: 0;
+      border-radius: 4px;
+      background: #22313a;
+      color: #fff;
+      min-height: 38px;
+      padding: 0 34px;
+      font-weight: 700;
+    }
+
+    .sidebar, .main, .inspector {
+      background: var(--bg);
+      min-height: 0;
+    }
+
+    .sidebar {
+      grid-column: 1;
+      grid-row: 2 / 4;
+      padding: 6px 0;
+      overflow: auto;
+      background: #121d23;
+      border-right: 1px solid #34444d;
+    }
+
+    .inspector {
+      grid-column: 3;
+      grid-row: 2 / 4;
+      padding: 10px;
+      overflow: auto;
+      background: #121d23;
+    }
+
+    .brand {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--buy);
+      box-shadow: 0 0 0 4px rgba(20, 138, 98, .16);
+      flex: 0 0 auto;
+    }
+
+    .section {
+      padding: 8px 6px;
+      border-top: 1px solid var(--line);
+    }
+
+    .section:first-of-type { border-top: 0; }
+
+    .section h2 {
+      font-size: 0;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .section h2::before {
+      content: "☰";
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 6px;
+      color: #aeb8c0;
+      font-size: 17px;
+      border-radius: 6px;
+    }
+
+    .section:nth-of-type(2) h2::before { content: "⚙"; }
+    .section:nth-of-type(3) h2::before { content: "▶"; }
+
+    .control {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    .control label, .check-row {
+      font-size: 13px;
+      color: #b8c3ca;
+    }
+
+    .sidebar .control,
+    .sidebar .check-row,
+    .sidebar .button-row,
+    .sidebar #findSignal {
+      display: none;
+    }
+
+    .sidebar:hover {
+      width: 300px;
+      position: relative;
+      z-index: 8;
+      box-shadow: 16px 0 32px rgba(0,0,0,.35);
+    }
+
+    .sidebar:hover .control,
+    .sidebar:hover .check-row,
+    .sidebar:hover .button-row,
+    .sidebar:hover #findSignal {
+      display: grid;
+    }
+
+    .sidebar:hover .check-row {
+      display: flex;
+    }
+
+    .sidebar:hover .section h2 {
+      font-size: 12px;
+      margin: 0 0 10px;
+    }
+
+    .sidebar:hover .section h2::before {
+      display: none;
+    }
+
+    input[type="number"], input[type="text"], select, input[type="file"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0f171c;
+      color: var(--ink);
+      min-height: 34px;
+      padding: 7px 9px;
+      border-radius: 6px;
+    }
+
+    .file-native {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .file-picker {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0f171c;
+      padding: 5px;
+    }
+
+    .file-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 4px;
+      border: 1px solid #4a6676;
+      background: #20323b;
+      color: #ffffff;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .file-name {
+      color: #dce7ec;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--blue);
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 28px;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .button-row.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: #17242b;
+      color: var(--ink);
+      border-radius: 6px;
+      min-height: 36px;
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+
+    .btn:hover { border-color: #6c8491; background: #20323b; }
+    .btn.primary {
+      background: #20323b;
+      color: #f3fbff;
+      border-color: #4a6676;
+      font-weight: 800;
+    }
+    .btn.primary:hover {
+      background: #28414d;
+      border-color: #6d8b9c;
+    }
+    .btn.buy { background: var(--buy); color: #fff; border-color: var(--buy); }
+    .btn.sell { background: var(--sell); color: #fff; border-color: var(--sell); }
+    .btn.warn { background: #fff7df; border-color: #dfbf5d; color: #604915; }
+    .btn.warn { background: #2b2a19; border-color: #66571e; color: #f2d66d; }
+    .btn:disabled {
+      background: #18262d !important;
+      border-color: #30424b !important;
+      color: #7f8b93 !important;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+
+    .btn.primary:disabled {
+      background: #18262d !important;
+      border-color: #30424b !important;
+      color: #7f8b93 !important;
+    }
+
+    .main {
+      grid-column: 2;
+      grid-row: 2;
+      display: grid;
+      grid-template-rows: 42px minmax(360px, 1fr) 42px;
+      overflow: hidden;
+      background: #0f171c;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 0 12px;
+      background: #121d23;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .market-title {
+      min-width: 0;
+    }
+
+    .market-title strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .market-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stats {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: #111a20;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #c9d2d8;
+      white-space: nowrap;
+    }
+
+    .chart-wrap {
+      position: relative;
+      padding: 4px;
+      background: #0f171c;
+      min-height: 0;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background:
+        linear-gradient(180deg, rgba(18,29,35,.94), rgba(15,23,28,.96)),
+        repeating-linear-gradient(0deg, rgba(190,205,214,.12) 0 1px, transparent 1px 58px),
+        repeating-linear-gradient(90deg, rgba(190,205,214,.10) 0 1px, transparent 1px 90px);
+      border: 1px solid var(--line);
+      box-shadow: none;
+      border-radius: 3px;
+      cursor: grab;
+    }
+
+    .overlay-note {
+      position: absolute;
+      left: 22px;
+      bottom: 22px;
+      max-width: min(520px, calc(100% - 44px));
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(216, 221, 213, .9);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #34404a;
+      backdrop-filter: blur(8px);
+    }
+
+    .quick-actions {
+      position: absolute;
+      right: 22px;
+      top: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px;
+      background: rgba(18,29,35,.92);
+      border: 1px solid rgba(67, 83, 92, .95);
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(25, 32, 38, .08);
+      backdrop-filter: blur(8px);
+    }
+
+    .quick-actions .btn {
+      min-height: 34px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .tf-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0b171d;
+    }
+
+    .tf-btn {
+      min-width: 42px;
+      height: 34px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--muted);
+      font: 700 13px "Segoe UI", sans-serif;
+      cursor: pointer;
+    }
+
+    .tf-btn.active {
+      background: #203743;
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px #40606f;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 0 12px;
+      background: #121d23;
+      border-top: 1px solid var(--line);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: none;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--ink);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .signal {
+      display: grid;
+      gap: 8px;
+    }
+
+    .signal-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 22px;
+    }
+
+    .signal-action .tag {
+      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #0f171c;
+      font-weight: 600;
+    }
+
+    .signal-action.buy { color: var(--buy); }
+    .signal-action.sell { color: var(--sell); }
+
+    .scorebar {
+      height: 8px;
+      border-radius: 999px;
+      background: #26363e;
+      overflow: hidden;
+    }
+
+    .scorebar span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--blue);
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 7px 12px;
+      font-size: 13px;
+      align-items: baseline;
+    }
+
+    .kv div:nth-child(odd) { color: var(--muted); }
+    .kv div:nth-child(even) { font-weight: 600; text-align: right; }
+
+    .log {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .log th, .log td {
+      border-bottom: 1px solid var(--line);
+      padding: 7px 4px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .log th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .inspector .panel:first-child {
+      border-color: #41525d;
+    }
+
+    .inspector .button-row .btn.buy,
+    .inspector .button-row .btn.sell {
+      min-height: 62px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .trade-bottom {
+      grid-column: 2;
+      grid-row: 3;
+      background: #121d23;
+      border-top: 1px solid #34444d;
+      padding: 8px 12px;
+      overflow: auto;
+    }
+
+    .trade-bottom .log {
+      color: #cbd4d9;
+    }
+
+    .trade-bottom-title {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      color: #cbd4d9;
+      height: 28px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .trade-bottom-title span:first-child {
+      color: #fff;
+      border-bottom: 2px solid #e8eef2;
+      height: 28px;
+    }
+
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 50px minmax(0, 1fr);
+        grid-template-rows: 52px minmax(0, 1fr) auto auto;
+      }
+      .inspector {
+        grid-column: 1 / -1;
+        grid-row: 4;
+        min-height: auto;
+        border-top: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 760px) {
+      html, body {
+        overflow: auto;
+      }
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 52px auto auto auto;
+        overflow: auto;
+      }
+      .platform-top {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .top-symbol-editor {
+        overflow-x: auto;
+      }
+      .account-strip {
+        display: none;
+      }
+      .main {
+        order: 1;
+        grid-column: 1;
+        grid-row: 2;
+      }
+      .sidebar {
+        order: 3;
+        grid-column: 1;
+        grid-row: 4;
+        width: auto;
+        display: block;
+        border-right: 0;
+      }
+      .inspector {
+        order: 4;
+        grid-column: 1;
+        grid-row: 5;
+      }
+      .sidebar, .inspector {
+        min-height: auto;
+      }
+      .topbar, .timeline {
+        grid-template-columns: 1fr;
+      }
+      .stats {
+        justify-content: flex-start;
+      }
+      .main {
+        min-height: 100vh;
+        grid-template-rows: auto minmax(420px, 1fr) auto;
+      }
+      .chart-wrap {
+        min-height: 56vh;
+        padding: 8px;
+      }
+      .overlay-note {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        max-width: none;
+      }
+      .quick-actions {
+        left: 14px;
+        right: 14px;
+        top: 14px;
+        justify-content: space-between;
+        overflow-x: auto;
+      }
+      .quick-actions .btn {
+        flex: 1 0 auto;
+      }
+      .tf-switch {
+        flex: 0 0 auto;
+      }
+      .sidebar .control,
+      .sidebar .check-row,
+      .sidebar .button-row,
+      .sidebar #findSignal {
+        display: grid;
+      }
+      .sidebar .check-row {
+        display: flex;
+      }
+      .sidebar .section h2 {
+        font-size: 12px;
+        margin: 0 0 10px;
+      }
+      .sidebar .section h2::before {
+        display: none;
+      }
+      .trade-bottom {
+        grid-column: 1;
+        grid-row: 3;
+        order: 2;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="platform-top">
+      <div class="top-symbol-editor">
+        <span class="symbol-badge">Replay</span>
+        <input id="symbolInputTop" type="text" value="XAUUSDm" aria-label="symbol">
+        <span class="pill">M5 / M15 / H1</span>
+        <label class="top-money">Demo USD <input id="startBalanceTop" type="number" min="1" step="100" value="1000"></label>
+      </div>
+      <div class="account-strip">
+        <span>บัญชีทดลอง</span>
+        <strong>0.00 USD</strong>
+        <span>🔔</span>
+        <span>⏱</span>
+        <span>☷</span>
+        <button class="deposit">ฝากเงิน</button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Fibo Pullback<br>Trade Simulator</h1>
+        <span class="status-dot" aria-hidden="true"></span>
+      </div>
+
+      <section class="section">
+        <h2>ข้อมูลราคา</h2>
+        <div class="control">
+          <label for="symbolInput">Symbol</label>
+          <input id="symbolInput" type="text" value="XAUUSDm">
+        </div>
+        <div class="control">
+          <label for="m5File">M5 CSV</label>
+          <div class="file-picker">
+            <label class="file-button" for="m5File">เลือกไฟล์</label>
+            <span class="file-name" id="m5FileName">ยังไม่ได้เลือกไฟล์</span>
+            <input class="file-native" id="m5File" type="file" accept=".csv,.txt">
+          </div>
+        </div>
+        <div class="control">
+          <label for="m15File">M15 CSV</label>
+          <div class="file-picker">
+            <label class="file-button" for="m15File">เลือกไฟล์</label>
+            <span class="file-name" id="m15FileName">ยังไม่ได้เลือกไฟล์</span>
+            <input class="file-native" id="m15File" type="file" accept=".csv,.txt">
+          </div>
+        </div>
+        <div class="control">
+          <label for="h1File">H1 CSV</label>
+          <div class="file-picker">
+            <label class="file-button" for="h1File">เลือกไฟล์</label>
+            <span class="file-name" id="h1FileName">ยังไม่ได้เลือกไฟล์</span>
+            <input class="file-native" id="h1File" type="file" accept=".csv,.txt">
+          </div>
+        </div>
+        <div class="button-row">
+          <button class="btn primary" id="loadFiles">โหลด CSV</button>
+          <button class="btn" id="demoData">Demo</button>
+        </div>
+        <button class="btn primary" id="loadFolderData" style="width:100%;margin-top:8px">โหลด XAU ในโฟลเดอร์</button>
+      </section>
+
+      <section class="section">
+        <h2>ตั้งค่า</h2>
+        <div class="control">
+          <label for="slPercent">SL Percent</label>
+          <input id="slPercent" type="number" min="0.01" step="0.01" value="0.25">
+        </div>
+        <div class="control">
+          <label for="tpPercent">TP Percent</label>
+          <input id="tpPercent" type="number" min="0.01" step="0.01" value="0.50">
+        </div>
+        <div class="control">
+          <label for="minScore">Min Score เดิม</label>
+          <input id="minScore" type="number" min="1" max="10" step="1" value="6" disabled>
+        </div>
+        <div class="control">
+          <label for="startBalance">Demo Balance USD</label>
+          <input id="startBalance" type="number" min="1" step="100" value="1000">
+        </div>
+        <div class="control">
+          <label for="lotSize">Lot</label>
+          <input id="lotSize" type="number" min="0.01" step="0.01" value="0.01">
+        </div>
+        <label class="check-row"><input id="autoLot" type="checkbox" checked> Auto Lot by Risk</label>
+        <label class="check-row"><input id="minLotOverride" type="checkbox" checked> Allow 0.01 Min Lot</label>
+        <div class="control">
+          <label for="riskPercent">Risk % / Trade</label>
+          <input id="riskPercent" type="number" min="0.1" max="20" step="0.1" value="2">
+        </div>
+        <div class="control">
+          <label for="maxDrawdownPercent">Max Drawdown %</label>
+          <input id="maxDrawdownPercent" type="number" min="0" max="80" step="1" value="0" disabled>
+        </div>
+        <div class="control">
+          <label for="equityLockPercent">Equity Lock %</label>
+          <input id="equityLockPercent" type="number" min="0" max="80" step="1" value="0" disabled>
+        </div>
+        <div class="control">
+          <label for="maxLossStreak">Stop Loss Streak</label>
+          <input id="maxLossStreak" type="number" min="0" max="20" step="1" value="0" disabled>
+        </div>
+        <div class="control">
+          <label for="contractSize">Contract Size</label>
+          <input id="contractSize" type="number" min="1" step="1" value="100">
+        </div>
+        <label class="check-row"><input id="useFibo" type="checkbox" checked> Fibonacci Zone</label>
+        <label class="check-row"><input id="useCandle" type="checkbox"> Candle Bounce</label>
+        <label class="check-row"><input id="useEmaTrend" type="checkbox"> EMA Trend</label>
+        <label class="check-row"><input id="useStructureTrend" type="checkbox"> Structure Trend</label>
+        <label class="check-row"><input id="useMomentumTrend" type="checkbox"> Momentum Trend</label>
+        <label class="check-row"><input id="usePullbackDepth" type="checkbox"> Pullback Depth</label>
+        <label class="check-row"><input id="useReaction" type="checkbox" checked> Price Reaction</label>
+        <label class="check-row"><input id="useMomentumShift" type="checkbox" checked> Momentum Shift</label>
+        <label class="check-row"><input id="useConfidence" type="checkbox" checked> Confidence Score</label>
+        <label class="check-row"><input id="useSideway" type="checkbox" checked> Sideway Filter</label>
+        <label class="check-row"><input id="useVolatility" type="checkbox" checked> Volatility Filter</label>
+        <label class="check-row"><input id="useBB" type="checkbox"> Bollinger Bands</label>
+        <label class="check-row"><input id="autoEnter" type="checkbox" checked disabled> Auto Enter Signal</label>
+      </section>
+
+      <section class="section">
+        <h2>ควบคุมกราฟ</h2>
+        <div class="button-row three">
+          <button class="btn" id="prevBtn">◀</button>
+          <button class="btn primary" id="nextBtn">▶</button>
+          <button class="btn" id="playBtn">Auto</button>
+        </div>
+        <div class="button-row" style="margin-top:8px">
+          <button class="btn warn" id="resetBtn">Reset</button>
+          <button class="btn" id="randomStart">สุ่มจุดเริ่ม</button>
+        </div>
+        <button class="btn primary" id="findSignal" style="width:100%;margin-top:8px">หา Signal ถัดไป</button>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="market-title">
+          <strong id="marketName">XAUUSDm Replay</strong>
+          <span id="timeLabel">ยังไม่โหลดข้อมูล</span>
+        </div>
+        <div class="stats">
+          <span class="pill" id="cursorPill">Candle 0 / 0</span>
+          <span class="pill" id="pricePill">Price -</span>
+          <span class="pill" id="balancePill">Balance 0.00 USD</span>
+          <span class="pill" id="equityValuePill">Equity 0.00 USD</span>
+          <span class="pill" id="equityPill">Trades 0 | Win 0 | Loss 0</span>
+        </div>
+      </header>
+
+      <div class="chart-wrap">
+        <canvas id="chart" width="1280" height="720"></canvas>
+        <div class="quick-actions">
+          <div class="tf-switch" aria-label="Chart timeframe">
+            <button class="tf-btn active" data-tf="M5" type="button">M5</button>
+            <button class="tf-btn" data-tf="M15" type="button">M15</button>
+            <button class="tf-btn" data-tf="H1" type="button">H1</button>
+          </div>
+          <button class="btn" id="quickPrev">◀</button>
+          <button class="btn primary" id="quickNext">▶</button>
+          <button class="btn" id="quickAuto">Auto</button>
+          <button class="btn" id="quickZoomOut">−</button>
+          <button class="btn" id="quickZoomIn">+</button>
+          <button class="btn" id="quickFit">Fit</button>
+          <button class="btn warn" id="quickFind">หา Signal</button>
+        </div>
+        <div class="overlay-note" id="overlayNote">
+          โหลด CSV หรือกด Demo แล้วใช้ปุ่ม Next เพื่อเปิดเผยกราฟทีละแท่ง ระบบจะไม่ใช้ข้อมูลอนาคตในการตัดสินใจ
+        </div>
+      </div>
+
+      <footer class="timeline">
+        <span id="leftTime">-</span>
+        <input id="timeline" type="range" min="0" max="0" value="0">
+        <span id="rightTime">-</span>
+      </footer>
+    </main>
+
+    <section class="trade-bottom">
+      <div class="trade-bottom-title">
+        <span>เปิดแล้ว</span>
+        <span>คำสั่งซื้อขายล่วงหน้า</span>
+        <span>ปิด</span>
+      </div>
+      <table class="log">
+        <thead>
+          <tr>
+            <th>เวลา</th>
+            <th>ประเภท</th>
+            <th>Entry</th>
+            <th>TP</th>
+            <th>SL</th>
+            <th>ผลล่าสุด</th>
+            <th>P/L</th>
+            <th>Balance</th>
+          </tr>
+        </thead>
+        <tbody id="bottomLogBody"></tbody>
+      </table>
+    </section>
+
+    <aside class="inspector">
+      <div class="panel signal">
+        <h2>Signal ตอนนี้</h2>
+        <div class="signal-action" id="actionBox">
+          <span>NONE</span>
+          <span class="tag" id="zoneTag">ZONE -</span>
+        </div>
+        <div class="scorebar"><span id="scoreFill"></span></div>
+        <div class="kv" id="signalKV"></div>
+        <div class="button-row">
+          <button class="btn buy" id="takeBuy">BUY</button>
+          <button class="btn sell" id="takeSell">SELL</button>
+        </div>
+        <button class="btn primary" id="takeSignal">เข้าไม้ตาม Signal</button>
+      </div>
+
+      <div class="panel">
+        <h2>สถานะไม้</h2>
+        <div class="kv" id="tradeKV"></div>
+      </div>
+
+      <div class="panel">
+        <h2>ผลการจำลอง</h2>
+        <table class="log">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Type</th>
+              <th>Entry</th>
+              <th>Exit</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+        <p class="empty" id="emptyLog">ยังไม่มีรายการเทรด</p>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const state = {
+      m5: [],
+      m15: [],
+      h1: [],
+      symbol: "XAUUSDm",
+      cursor: 80,
+      chartTimeframe: "M5",
+      chartView: 110,
+      chartPan: 0,
+      priceZoom: 1,
+      pricePan: 0,
+      draggingChart: false,
+      dragMode: "",
+      dragX: 0,
+      dragY: 0,
+      dragPanStart: 0,
+      dragPricePanStart: 0,
+      dragChartViewStart: 110,
+      dragPriceZoomStart: 1,
+      crosshair: null,
+      playing: false,
+      playTimer: null,
+      balance: 1000,
+      peakEquity: 1000,
+      consecutiveLosses: 0,
+      halted: false,
+      haltReason: "",
+      openTrade: null,
+      trades: [],
+      lastSignal: null
+    };
+
+    const els = {
+      chart: document.getElementById("chart"),
+      m5File: document.getElementById("m5File"),
+      m15File: document.getElementById("m15File"),
+      h1File: document.getElementById("h1File"),
+      m5FileName: document.getElementById("m5FileName"),
+      m15FileName: document.getElementById("m15FileName"),
+      h1FileName: document.getElementById("h1FileName"),
+      loadFiles: document.getElementById("loadFiles"),
+      loadFolderData: document.getElementById("loadFolderData"),
+      demoData: document.getElementById("demoData"),
+      symbolInput: document.getElementById("symbolInput"),
+      symbolInputTop: document.getElementById("symbolInputTop"),
+      slPercent: document.getElementById("slPercent"),
+      tpPercent: document.getElementById("tpPercent"),
+      minScore: document.getElementById("minScore"),
+      startBalance: document.getElementById("startBalance"),
+      startBalanceTop: document.getElementById("startBalanceTop"),
+      lotSize: document.getElementById("lotSize"),
+      autoLot: document.getElementById("autoLot"),
+      minLotOverride: document.getElementById("minLotOverride"),
+      riskPercent: document.getElementById("riskPercent"),
+      maxDrawdownPercent: document.getElementById("maxDrawdownPercent"),
+      equityLockPercent: document.getElementById("equityLockPercent"),
+      maxLossStreak: document.getElementById("maxLossStreak"),
+      contractSize: document.getElementById("contractSize"),
+      useFibo: document.getElementById("useFibo"),
+      useCandle: document.getElementById("useCandle"),
+      useEmaTrend: document.getElementById("useEmaTrend"),
+      useStructureTrend: document.getElementById("useStructureTrend"),
+      useMomentumTrend: document.getElementById("useMomentumTrend"),
+      usePullbackDepth: document.getElementById("usePullbackDepth"),
+      useReaction: document.getElementById("useReaction"),
+      useMomentumShift: document.getElementById("useMomentumShift"),
+      useConfidence: document.getElementById("useConfidence"),
+      useSideway: document.getElementById("useSideway"),
+      useVolatility: document.getElementById("useVolatility"),
+      useBB: document.getElementById("useBB"),
+      autoEnter: document.getElementById("autoEnter"),
+      prevBtn: document.getElementById("prevBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      playBtn: document.getElementById("playBtn"),
+      quickPrev: document.getElementById("quickPrev"),
+      quickNext: document.getElementById("quickNext"),
+      quickAuto: document.getElementById("quickAuto"),
+      quickZoomOut: document.getElementById("quickZoomOut"),
+      quickZoomIn: document.getElementById("quickZoomIn"),
+      quickFit: document.getElementById("quickFit"),
+      quickFind: document.getElementById("quickFind"),
+      resetBtn: document.getElementById("resetBtn"),
+      randomStart: document.getElementById("randomStart"),
+      findSignal: document.getElementById("findSignal"),
+      tfButtons: Array.from(document.querySelectorAll(".tf-btn")),
+      timeline: document.getElementById("timeline"),
+      marketName: document.getElementById("marketName"),
+      timeLabel: document.getElementById("timeLabel"),
+      cursorPill: document.getElementById("cursorPill"),
+      pricePill: document.getElementById("pricePill"),
+      balancePill: document.getElementById("balancePill"),
+      equityValuePill: document.getElementById("equityValuePill"),
+      equityPill: document.getElementById("equityPill"),
+      overlayNote: document.getElementById("overlayNote"),
+      leftTime: document.getElementById("leftTime"),
+      rightTime: document.getElementById("rightTime"),
+      actionBox: document.getElementById("actionBox"),
+      zoneTag: document.getElementById("zoneTag"),
+      scoreFill: document.getElementById("scoreFill"),
+      signalKV: document.getElementById("signalKV"),
+      tradeKV: document.getElementById("tradeKV"),
+      takeBuy: document.getElementById("takeBuy"),
+      takeSell: document.getElementById("takeSell"),
+      takeSignal: document.getElementById("takeSignal"),
+      logBody: document.getElementById("logBody"),
+      bottomLogBody: document.getElementById("bottomLogBody"),
+      emptyLog: document.getElementById("emptyLog")
+    };
+
+    const ctx = els.chart.getContext("2d");
+
+    function ema(values, period) {
+      if (!values.length) return [];
+      const k = 2 / (period + 1);
+      const out = [values[0]];
+      for (let i = 1; i < values.length; i++) out.push(values[i] * k + out[i - 1] * (1 - k));
+      return out;
+    }
+
+    function rsi(values, period = 14) {
+      if (!values || values.length < period + 1) return 50;
+      let gains = 0, losses = 0;
+      for (let i = values.length - period; i < values.length; i++) {
+        const d = values[i] - values[i - 1];
+        if (d > 0) gains += d;
+        else losses -= d;
+      }
+      const rs = gains / (losses || 1);
+      return 100 - (100 / (1 + rs));
+    }
+
+    function atr(candles, period = 14) {
+      if (!candles || candles.length < period + 1) return 0;
+      const trs = [];
+      for (let i = candles.length - period; i < candles.length; i++) {
+        const c = candles[i];
+        const prev = candles[i - 1];
+        trs.push(Math.max(c.h - c.l, Math.abs(c.h - prev.c), Math.abs(c.l - prev.c)));
+      }
+      return trs.reduce((a, b) => a + b, 0) / trs.length;
+    }
+
+    function momentum(values) {
+      if (!values || values.length < 6) return 0;
+      return values[values.length - 1] - values[values.length - 5];
+    }
+
+    function bollinger(values, period = 20, mult = 2) {
+      if (!values || values.length < period) return { upper: Infinity, middle: 0, lower: -Infinity };
+      const recent = values.slice(-period);
+      const middle = recent.reduce((a, b) => a + b, 0) / period;
+      const variance = recent.reduce((sum, v) => sum + Math.pow(v - middle, 2), 0) / period;
+      const sd = Math.sqrt(variance);
+      return { upper: middle + sd * mult, middle, lower: middle - sd * mult };
+    }
+
+    function getSupportResistance(prices) {
+      const recent = prices.slice(-20);
+      return { support: Math.min(...recent), resistance: Math.max(...recent) };
+    }
+
+    function isNear(price, target) {
+      if (!target) return false;
+      return Math.abs(price - target) / target <= 0.003;
+    }
+
+    function confirmBounce(candles, type) {
+      if (!candles || candles.length < 2) return false;
+      const c = candles[candles.length - 1];
+      const prev = candles[candles.length - 2];
+      if (type === "BUY") return c.c > c.o && prev.c <= prev.o;
+      if (type === "SELL") return c.c < c.o && prev.c >= prev.o;
+      return false;
+    }
+
+    function getFiboZoneFromPrices(values) {
+      const recent = values.slice(-50);
+      const high = Math.max(...recent);
+      const low = Math.min(...recent);
+      const diff = high - low;
+      return {
+        high,
+        low,
+        fibo38: high - diff * 0.382,
+        fibo50: high - diff * 0.5,
+        fibo61: high - diff * 0.618,
+        fibo78: high - diff * 0.786,
+        fibo88: high - diff * 0.886
+      };
+    }
+
+    function rejectionCandle(candles, direction) {
+      if (!candles || candles.length < 2) return false;
+      const c = candles[candles.length - 1];
+      const range = Math.max(0.01, c.h - c.l);
+      const body = Math.abs(c.c - c.o);
+      const lowerWick = Math.min(c.o, c.c) - c.l;
+      const upperWick = c.h - Math.max(c.o, c.c);
+      const bodyOK = body <= range * 0.65;
+      if (direction === "BUY") return c.c > c.o && lowerWick >= body * 1.2 && lowerWick >= range * 0.25 && bodyOK;
+      return c.c < c.o && upperWick >= body * 1.2 && upperWick >= range * 0.25 && bodyOK;
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/).filter(Boolean);
+      if (!lines.length) return [];
+      const first = lines[0].toLowerCase();
+      const delimiter = first.includes("\t") ? "\t" : first.includes(";") ? ";" : ",";
+      const headers = lines[0].split(delimiter).map(x => x.trim().toLowerCase().replace(/[<>]/g, ""));
+      const hasHeader = /time|date|open|high|low|close/.test(first);
+      const rows = hasHeader ? lines.slice(1) : lines;
+      const dateIdx = headers.indexOf("date");
+      const timeIdx = headers.indexOf("time");
+      const openIdx = headers.indexOf("open");
+      const highIdx = headers.indexOf("high");
+      const lowIdx = headers.indexOf("low");
+      const closeIdx = headers.indexOf("close");
+
+      return rows.map(line => {
+        const p = line.split(delimiter).map(x => x.trim());
+        if (p.length < 5) return null;
+        if (hasHeader && openIdx >= 0 && highIdx >= 0 && lowIdx >= 0 && closeIdx >= 0) {
+          const t = dateIdx >= 0 && timeIdx >= 0
+            ? `${p[dateIdx].replace(/\./g, "-")} ${p[timeIdx]}`
+            : (timeIdx >= 0 ? p[timeIdx] : p[0]);
+          const nums = [p[openIdx], p[highIdx], p[lowIdx], p[closeIdx]].map(Number);
+          if (nums.some(n => Number.isNaN(n))) return null;
+          return { t, o: nums[0], h: nums[1], l: nums[2], c: nums[3] };
+        }
+
+        const nums = p.slice(-4).map(Number);
+        if (nums.some(n => Number.isNaN(n))) return null;
+        return { t: p.slice(0, p.length - 4).join(" "), o: nums[0], h: nums[1], l: nums[2], c: nums[3] };
+      }).filter(Boolean);
+    }
+
+    function aggregate(candles, group) {
+      const out = [];
+      for (let i = 0; i < candles.length; i += group) {
+        const chunk = candles.slice(i, i + group);
+        if (chunk.length < group) break;
+        out.push({
+          t: chunk[0].t,
+          o: chunk[0].o,
+          h: Math.max(...chunk.map(c => c.h)),
+          l: Math.min(...chunk.map(c => c.l)),
+          c: chunk[chunk.length - 1].c
+        });
+      }
+      return out;
+    }
+
+    function makeDemoData() {
+      const candles = [];
+      let p = 2325;
+      const start = new Date("2026-01-01T00:00:00");
+      for (let i = 0; i < 900; i++) {
+        let drift = 0.18;
+        let wave = Math.sin(i / 9) * 1.1 + Math.sin(i / 23) * 1.8;
+
+        if (i >= 560 && i < 630) drift = 0.62;
+        else if (i >= 630 && i < 652) drift = -0.82;
+        else if (i >= 652 && i < 670) drift = 0.42;
+        else if (i >= 720 && i < 790) drift = -0.58;
+        else if (i >= 790 && i < 812) drift = 0.74;
+        else if (i >= 812) drift = -0.32;
+
+        const shock = 0;
+        const o = p;
+        const c = p + drift + wave * 0.08 + shock * 0.12;
+        const wick = 0.8 + Math.abs(Math.sin(i / 7)) * 1.8;
+        let bar = {
+          t: new Date(start.getTime() + i * 5 * 60000).toISOString().slice(0, 16).replace("T", " "),
+          o: round2(o),
+          h: round2(Math.max(o, c) + wick),
+          l: round2(Math.min(o, c) - wick),
+          c: round2(c)
+        };
+
+        if (i === 652) {
+          bar = {
+            t: bar.t,
+            o: round2(o - 1.8),
+            h: round2(o + 2.2),
+            l: round2(o - 9.8),
+            c: round2(o + 3.4)
+          };
+        }
+
+        if (i === 812) {
+          bar = {
+            t: bar.t,
+            o: round2(o + 1.8),
+            h: round2(o + 9.8),
+            l: round2(o - 2.2),
+            c: round2(o - 3.4)
+          };
+        }
+
+        candles.push(bar);
+        p = c;
+      }
+      return candles;
+    }
+
+    function round2(v) {
+      return Math.round(v * 100) / 100;
+    }
+
+    function getSettings() {
+      return {
+        symbol: String(els.symbolInput.value || els.symbolInputTop.value || "SYMBOL").trim(),
+        slPercent: Number(els.slPercent.value || 0.25),
+        tpPercent: Number(els.tpPercent.value || 0.5),
+        minScore: Number(els.minScore.value || 6),
+        startBalance: Number(els.startBalanceTop.value || els.startBalance.value || 1000),
+        lotSize: Number(els.lotSize.value || 0.01),
+        autoLot: els.autoLot.checked,
+        minLotOverride: els.minLotOverride.checked,
+        riskPercent: Number(els.riskPercent.value || 2),
+        maxDrawdownPercent: Number(els.maxDrawdownPercent.value || 0),
+        equityLockPercent: Number(els.equityLockPercent.value || 0),
+        maxLossStreak: Number(els.maxLossStreak.value || 0),
+        contractSize: Number(els.contractSize.value || 100),
+        useFibo: els.useFibo.checked,
+        useCandle: els.useCandle.checked,
+        useEmaTrend: els.useEmaTrend.checked,
+        useStructureTrend: els.useStructureTrend.checked,
+        useMomentumTrend: els.useMomentumTrend.checked,
+        usePullbackDepth: els.usePullbackDepth.checked,
+        useReaction: els.useReaction.checked,
+        useMomentumShift: els.useMomentumShift.checked,
+        useConfidence: els.useConfidence.checked,
+        useSideway: els.useSideway.checked,
+        useVolatility: els.useVolatility.checked,
+        useBB: els.useBB.checked
+      };
+    }
+
+    function money(v) {
+      return `${Number(v || 0).toFixed(2)} USD`;
+    }
+
+    function calcTradeProfit(trade, price) {
+      if (!trade || !Number.isFinite(price)) return 0;
+      const diff = trade.type === "BUY" ? price - trade.entry : trade.entry - price;
+      return diff * trade.lot * trade.contractSize;
+    }
+
+    function roundLot(value) {
+      return Math.max(0.01, Math.floor(value * 100) / 100);
+    }
+
+    function calculateRiskLot(entry, sl) {
+      const settings = getSettings();
+      if (!settings.autoLot) {
+        const lot = Math.max(0.01, settings.lotSize);
+        return {
+          lot,
+          riskMoney: Math.abs(entry - sl) * lot * settings.contractSize,
+          blocked: false,
+          reason: ""
+        };
+      }
+      const riskMoney = Math.max(0, state.balance * settings.riskPercent / 100);
+      const riskPerLot = Math.abs(entry - sl) * settings.contractSize;
+      if (!riskMoney || !riskPerLot) {
+        const lot = Math.max(0.01, settings.lotSize);
+        return {
+          lot,
+          riskMoney: Math.abs(entry - sl) * lot * settings.contractSize,
+          blocked: false,
+          reason: "FIXED_LOT_FALLBACK"
+        };
+      }
+
+      const rawLot = riskMoney / riskPerLot;
+      const minLotRisk = riskPerLot * 0.01;
+
+      if (rawLot < 0.01) {
+        if (settings.minLotOverride) {
+          return {
+            lot: 0.01,
+            riskMoney: minLotRisk,
+            blocked: false,
+            overRisk: true,
+            reason: `MIN LOT OVERRIDE: ${money(minLotRisk)} > PLAN ${money(riskMoney)}`
+          };
+        }
+
+        return {
+          lot: 0,
+          riskMoney: minLotRisk,
+          blocked: true,
+          reason: `MIN_LOT_RISK ${money(minLotRisk)} > RISK ${money(riskMoney)}`
+        };
+      }
+
+      const lot = roundLot(rawLot);
+      return {
+        lot,
+        riskMoney: riskPerLot * lot,
+        blocked: false,
+        reason: ""
+      };
+    }
+
+    function currentEquity() {
+      const current = state.m5[state.cursor];
+      const floating = state.openTrade && current ? calcTradeProfit(state.openTrade, current.c) : 0;
+      return state.balance + floating;
+    }
+
+    function updateRiskHalt() {
+      const settings = getSettings();
+      const equity = currentEquity();
+      state.peakEquity = Math.max(state.peakEquity || settings.startBalance, equity);
+      state.halted = false;
+      state.haltReason = "";
+    }
+
+    function sliceToCursor(source, ratio = 1) {
+      if (!source.length) return [];
+      const count = Math.max(0, Math.floor((state.cursor + 1) / ratio));
+      return source.slice(0, Math.min(source.length, count));
+    }
+
+    function evaluateSignal() {
+      const settings = getSettings();
+      const candles = state.m5.slice(0, state.cursor + 1);
+      const prices = candles.map(c => c.c);
+      const zoneCandles = state.m15.length ? sliceToCursor(state.m15, 3) : aggregate(candles, 3);
+      const zonePrices = zoneCandles.map(c => c.c);
+      const trendCandles = state.h1.length ? sliceToCursor(state.h1, 12) : aggregate(candles, 12);
+      const trendPrices = trendCandles.map(c => c.c);
+
+      if (candles.length < 60 || zonePrices.length < 20 || trendPrices.length < 50) {
+        return {
+          action: "NONE",
+          reason: "NO_ENOUGH_DATA",
+          score: 0,
+          buyScore: 0,
+          sellScore: 0,
+          zone: "-",
+          buyReasons: ["ข้อมูลยังไม่พอ รอ H1 อย่างน้อย 50 แท่ง"],
+          sellReasons: ["ข้อมูลยังไม่พอ รอ H1 อย่างน้อย 50 แท่ง"]
+        };
+      }
+
+      const price = prices[prices.length - 1];
+      const e20 = ema(prices, 20);
+      const e50 = ema(prices, 50);
+      const lastE20 = e20[e20.length - 1];
+      const lastE50 = e50[e50.length - 1];
+      const e20H = ema(trendPrices, 20);
+      const e50H = ema(trendPrices, 50);
+      const upTrend = e20H[e20H.length - 1] > e50H[e50H.length - 1];
+      const downTrend = e20H[e20H.length - 1] < e50H[e50H.length - 1];
+      const strongTrend = Math.abs(e20H[e20H.length - 1] - e50H[e50H.length - 1]) > 0.5;
+
+      const recent = candles.slice(-10);
+      const avgRange = recent.reduce((s, c) => s + (c.h - c.l), 0) / recent.length;
+      const safeATR = atr(candles, 14) || avgRange;
+      const distanceOK = Math.abs(price - lastE20) <= 1.2 * safeATR;
+      const mom = momentum(prices);
+      const prevMom = momentum(prices.slice(0, -1));
+      const rsiVal = rsi(prices);
+      const ranges20 = candles.slice(-20).map(c => c.h - c.l).sort((a, b) => a - b);
+      const medianRange20 = ranges20[Math.floor(ranges20.length / 2)] || avgRange;
+      const volatilityBlock = avgRange > 1.3 * medianRange20;
+      const sr = getSupportResistance(prices);
+      const support = sr.support;
+      const resistance = sr.resistance;
+      const sidewayMarket = Math.abs(mom) < 0.2 && Math.abs(resistance - support) < avgRange * 6;
+
+      const recentHighs = candles.slice(-12).map(c => c.h);
+      const recentLows = candles.slice(-12).map(c => c.l);
+      const recentHigh = Math.max(...recentHighs);
+      const recentLow = Math.min(...recentLows);
+      const older = candles.slice(-30, -12);
+      const olderHigh = Math.max(...older.map(c => c.h));
+      const olderLow = Math.min(...older.map(c => c.l));
+      const structureUp = recentHigh > olderHigh && recentLow > olderLow;
+      const structureDown = recentHigh < olderHigh && recentLow < olderLow;
+
+      const nearSupport = isNear(price, support);
+      const nearResistance = isNear(price, resistance);
+      const pullbackWidth = Math.max(1.5, avgRange * 0.25);
+      const pullbackBuy = price <= lastE20 + pullbackWidth && price >= support;
+      const pullbackSell = price >= lastE20 - pullbackWidth && price <= resistance;
+      const momentumTrendBuy = mom > 0.3 && price > lastE20;
+      const momentumTrendSell = mom < -0.3 && price < lastE20;
+      const momentumShiftBuy = mom > 0 && prevMom <= 0;
+      const momentumShiftSell = mom < 0 && prevMom >= 0;
+      const reactionBuy = confirmBounce(candles, "BUY");
+      const reactionSell = confirmBounce(candles, "SELL");
+      const lastCandle = candles[candles.length - 1];
+      const prevCandle = candles[candles.length - 2];
+      const bb = bollinger(prices);
+      const bbBuy = prevCandle.l <= bb.lower && lastCandle.c > bb.lower && lastCandle.c > prevCandle.c;
+      const bbSell = prevCandle.h >= bb.upper && lastCandle.c < bb.upper && lastCandle.c < prevCandle.c;
+
+      const fibo = settings.useFibo ? getFiboZoneFromPrices(zonePrices) : null;
+      const inDeepFibo = !settings.useFibo || (price >= fibo.fibo88 && price <= fibo.fibo78);
+      const inMainFibo = !settings.useFibo || (price <= fibo.fibo38 && price >= fibo.fibo61);
+      const fiboOK = !settings.useFibo || inMainFibo || inDeepFibo;
+      const fiboStructureOK = !settings.useFibo || inMainFibo || inDeepFibo;
+      const structureBuy = structureUp && fiboStructureOK && nearSupport;
+      const structureSell = structureDown && fiboStructureOK && nearResistance;
+
+      let setupConfidence = 0;
+      if (structureBuy || structureSell) setupConfidence += 2;
+      if (settings.useFibo) {
+        if (inDeepFibo) setupConfidence += 2;
+        else if (inMainFibo) setupConfidence += 1;
+      }
+      if (strongTrend) setupConfidence += 2;
+      if (Math.abs(mom) > 0.2) setupConfidence += 1;
+      if (Math.abs(mom) > 0.4) setupConfidence += 1;
+      if (Math.abs(price - lastE20) < 3) setupConfidence += 1;
+      if (!sidewayMarket) setupConfidence += 1;
+      if (!volatilityBlock) setupConfidence += 1;
+      setupConfidence = Math.min(10, setupConfidence);
+
+      const rsiBuyOK = rsiVal > 40;
+      const rsiSellOK = rsiVal < 60;
+      const volatilityOK = !settings.useVolatility || !volatilityBlock;
+      const candleBuyOK = !settings.useCandle || reactionBuy;
+      const candleSellOK = !settings.useCandle || reactionSell;
+      const emaTrendBuyOK = !settings.useEmaTrend || upTrend;
+      const emaTrendSellOK = !settings.useEmaTrend || downTrend;
+      const structureBuyOK = !settings.useStructureTrend || structureUp;
+      const structureSellOK = !settings.useStructureTrend || structureDown;
+      const momentumTrendBuyOK = !settings.useMomentumTrend || momentumTrendBuy;
+      const momentumTrendSellOK = !settings.useMomentumTrend || momentumTrendSell;
+      const pullbackDepthBuyOK = !settings.usePullbackDepth || pullbackBuy;
+      const pullbackDepthSellOK = !settings.usePullbackDepth || pullbackSell;
+      const reactionBuyOK = !settings.useReaction || reactionBuy;
+      const reactionSellOK = !settings.useReaction || reactionSell;
+      const momentumShiftBuyOK = !settings.useMomentumShift || momentumShiftBuy;
+      const momentumShiftSellOK = !settings.useMomentumShift || momentumShiftSell;
+      const sidewayOK = !settings.useSideway || !sidewayMarket;
+      const confidenceOK = !settings.useConfidence || setupConfidence >= 6;
+      const bbBuyOK = !settings.useBB || bbBuy;
+      const bbSellOK = !settings.useBB || bbSell;
+
+      const buyOK = rsiBuyOK && bbBuyOK && fiboOK && volatilityOK && candleBuyOK && emaTrendBuyOK && structureBuyOK && momentumTrendBuyOK && pullbackDepthBuyOK && momentumShiftBuyOK && reactionBuyOK && sidewayOK && confidenceOK;
+      const sellOK = rsiSellOK && bbSellOK && fiboOK && volatilityOK && candleSellOK && emaTrendSellOK && structureSellOK && momentumTrendSellOK && pullbackDepthSellOK && momentumShiftSellOK && reactionSellOK && sidewayOK && confidenceOK;
+
+      const buyReasons = [];
+      const sellReasons = [];
+      if (!rsiBuyOK) buyReasons.push("RSI BUY ต้องมากกว่า 40");
+      if (!fiboOK) buyReasons.push("ยังไม่เข้า Fibo zone เดิม");
+      if (!volatilityOK) buyReasons.push("Volatility block");
+      if (!candleBuyOK) buyReasons.push("ยังไม่มี Candle Bounce BUY");
+      if (!reactionBuyOK) buyReasons.push("ยังไม่มี Price Reaction BUY");
+      if (!emaTrendBuyOK) buyReasons.push("1H ยังไม่ใช่ขาขึ้น");
+      if (!structureBuyOK) buyReasons.push("Structure ยังไม่ขึ้น");
+      if (!momentumTrendBuyOK) buyReasons.push("Momentum Trend BUY ยังไม่ผ่าน");
+      if (!pullbackDepthBuyOK) buyReasons.push("Pullback BUY ยังไม่ถึงจุด");
+      if (!momentumShiftBuyOK) buyReasons.push("Momentum ยังไม่กลับ BUY");
+      if (!sidewayOK) buyReasons.push("ตลาด Sideway");
+      if (!confidenceOK) buyReasons.push("Setup Confidence ต่ำกว่า 6");
+      if (!bbBuyOK) buyReasons.push("Bollinger Bands BUY ยังไม่ผ่าน");
+
+      if (!rsiSellOK) sellReasons.push("RSI SELL ต้องน้อยกว่า 60");
+      if (!fiboOK) sellReasons.push("ยังไม่เข้า Fibo zone เดิม");
+      if (!volatilityOK) sellReasons.push("Volatility block");
+      if (!candleSellOK) sellReasons.push("ยังไม่มี Candle Bounce SELL");
+      if (!reactionSellOK) sellReasons.push("ยังไม่มี Price Reaction SELL");
+      if (!emaTrendSellOK) sellReasons.push("1H ยังไม่ใช่ขาลง");
+      if (!structureSellOK) sellReasons.push("Structure ยังไม่ลง");
+      if (!momentumTrendSellOK) sellReasons.push("Momentum Trend SELL ยังไม่ผ่าน");
+      if (!pullbackDepthSellOK) sellReasons.push("Pullback SELL ยังไม่ถึงจุด");
+      if (!momentumShiftSellOK) sellReasons.push("Momentum ยังไม่กลับ SELL");
+      if (!sidewayOK) sellReasons.push("ตลาด Sideway");
+      if (!confidenceOK) sellReasons.push("Setup Confidence ต่ำกว่า 6");
+      if (!bbSellOK) sellReasons.push("Bollinger Bands SELL ยังไม่ผ่าน");
+
+      const action = buyOK ? "BUY" : sellOK ? "SELL" : "NONE";
+      const zone = !settings.useFibo ? "OFF" : inDeepFibo ? "DEEP" : inMainFibo ? "MAIN" : "NONE";
+
+      return {
+        action,
+        price,
+        fibo,
+        zone,
+        score: setupConfidence,
+        buyScore: setupConfidence,
+        sellScore: setupConfidence,
+        buyReasons,
+        sellReasons,
+        upTrend,
+        downTrend,
+        strongTrend,
+        rsiVal,
+        mom,
+        prevMom,
+        rejectionBuy: reactionBuy,
+        rejectionSell: reactionSell,
+        momentumShiftBuy,
+        momentumShiftSell,
+        sidewayMarket,
+        volatilityBlock,
+        distanceOK,
+        support,
+        resistance,
+        buyFiboZone: zone,
+        sellFiboZone: zone
+      };
+    }
+    function calculateTPSL(price, type) {
+      const settings = getSettings();
+      const slPercent = settings.slPercent / 100;
+      const tpPercent = settings.tpPercent / 100;
+      if (type === "BUY") return { entry: price, sl: price * (1 - slPercent), tp: price * (1 + tpPercent) };
+      return { entry: price, sl: price * (1 + slPercent), tp: price * (1 - tpPercent) };
+    }
+
+    function openTrade(type, signalOverride) {
+      updateRiskHalt();
+      if (!state.m5.length || state.openTrade || state.halted) return;
+      const settings = getSettings();
+      const c = state.m5[state.cursor];
+      const plan = calculateTPSL(c.c, type);
+      const riskPlan = calculateRiskLot(plan.entry, plan.sl);
+
+      if (riskPlan.blocked) {
+        els.overlayNote.textContent = `ข้ามไม้: ${riskPlan.reason}`;
+        return;
+      }
+
+      state.openTrade = {
+        type,
+        entryIndex: state.cursor,
+        entryTime: c.t,
+        entry: plan.entry,
+        sl: plan.sl,
+        tp: plan.tp,
+        lot: riskPlan.lot,
+        contractSize: settings.contractSize,
+        riskMoney: riskPlan.riskMoney,
+        overRisk: riskPlan.overRisk || false,
+        riskWarning: riskPlan.reason || "",
+        signal: signalOverride || state.lastSignal
+      };
+
+      if (riskPlan.overRisk) {
+        els.overlayNote.textContent = riskPlan.reason;
+      }
+
+      render();
+    }
+
+    function updateOpenTrade() {
+      if (!state.openTrade || !state.m5[state.cursor]) return;
+      const t = state.openTrade;
+      const c = state.m5[state.cursor];
+      let exit = null;
+      let result = "";
+      if (t.type === "BUY") {
+        if (c.l <= t.sl) { exit = t.sl; result = "LOSS"; }
+        else if (c.h >= t.tp) { exit = t.tp; result = "WIN"; }
+      } else {
+        if (c.h >= t.sl) { exit = t.sl; result = "LOSS"; }
+        else if (c.l <= t.tp) { exit = t.tp; result = "WIN"; }
+      }
+      if (exit != null) {
+        const profit = calcTradeProfit(t, exit);
+        state.balance += profit;
+        state.consecutiveLosses = result === "LOSS" ? state.consecutiveLosses + 1 : 0;
+        state.trades.push({
+          ...t,
+          exitIndex: state.cursor,
+          exitTime: c.t,
+          exit,
+          result,
+          profit,
+          balanceAfter: state.balance
+        });
+        state.openTrade = null;
+        updateRiskHalt();
+      }
+    }
+
+    function step(delta) {
+      if (!state.m5.length) return;
+      state.cursor = Math.max(60, Math.min(state.m5.length - 1, state.cursor + delta));
+      updateOpenTrade();
+      const signal = evaluateSignal();
+      if (
+        delta > 0 &&
+        !state.openTrade &&
+        !state.halted &&
+        (signal.action === "BUY" || signal.action === "SELL")
+      ) {
+        openTrade(signal.action, signal);
+        return;
+      }
+      render();
+    }
+
+    function findNextSignal() {
+      if (!state.m5.length) return;
+      const start = state.cursor;
+      for (let i = 0; i < 500 && state.cursor < state.m5.length - 1; i++) {
+        state.cursor++;
+        updateOpenTrade();
+        const signal = evaluateSignal();
+        if (!state.openTrade && (signal.action === "BUY" || signal.action === "SELL")) {
+          updateRiskHalt();
+          if (!state.halted) {
+            openTrade(signal.action, signal);
+          } else {
+            render();
+          }
+          els.overlayNote.textContent = `เจอ Signal ที่แท่ง ${state.cursor + 1}: ${signal.action} | Score ${signal.score}/10 | Zone ${signal.zone}`;
+          return;
+        }
+      }
+      render();
+      els.overlayNote.textContent = `สแกนจากแท่ง ${start + 1} แล้ว ยังไม่เจอ Signal ที่ผ่านครบ ลองปิดบาง filter หรือกดสุ่มจุดเริ่ม`;
+    }
+
+    function resetReplay(start = 80) {
+      const minReady = Math.min(Math.max(60, 12 * 50), Math.max(60, state.m5.length - 1));
+      state.cursor = Math.min(Math.max(minReady, start), Math.max(minReady, state.m5.length - 1));
+      state.openTrade = null;
+      state.trades = [];
+      state.balance = getSettings().startBalance;
+      state.peakEquity = state.balance;
+      state.consecutiveLosses = 0;
+      state.halted = false;
+      state.haltReason = "";
+      stopPlay();
+      render();
+    }
+
+    function stopPlay() {
+      state.playing = false;
+      clearInterval(state.playTimer);
+      state.playTimer = null;
+      els.playBtn.textContent = "Auto";
+      els.quickAuto.textContent = "Auto";
+    }
+
+    function zoomChart(multiplier) {
+      state.chartView = Math.max(24, Math.min(240, Math.round(state.chartView * multiplier)));
+      render();
+    }
+
+    function fitChart() {
+      state.chartPan = 0;
+      state.chartView = 110;
+      state.priceZoom = 1;
+      state.pricePan = 0;
+      render();
+    }
+
+    function getChartSeries() {
+      const tf = state.chartTimeframe || "M5";
+      const ratio = tf === "H1" ? 12 : tf === "M15" ? 3 : 1;
+      const source = tf === "H1" ? state.h1 : tf === "M15" ? state.m15 : state.m5;
+      const cursor = Math.max(0, Math.min(source.length - 1, Math.floor(state.cursor / ratio)));
+      return { tf, source, cursor, ratio };
+    }
+
+    function togglePlay() {
+      if (state.playing) {
+        stopPlay();
+        return;
+      }
+      state.playing = true;
+      els.playBtn.textContent = "Stop";
+      els.quickAuto.textContent = "Stop";
+      state.playTimer = setInterval(() => {
+        if (state.cursor >= state.m5.length - 1) stopPlay();
+        else step(1);
+      }, 420);
+    }
+
+    function loadDataset(m5, m15, h1) {
+      const settings = getSettings();
+      state.symbol = settings.symbol || state.symbol || "SYMBOL";
+      state.m5 = m5;
+      state.m15 = m15 && m15.length ? m15 : aggregate(m5, 3);
+      state.h1 = h1 && h1.length ? h1 : aggregate(m5, 12);
+      els.timeline.max = String(Math.max(0, state.m5.length - 1));
+      els.marketName.textContent = `${state.symbol} Replay`;
+      resetReplay(Math.min(610, state.m5.length - 1));
+      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0 }));
+      els.overlayNote.textContent = "โหมด replay: ใช้ Next เพื่อเปิดแท่งใหม่ทีละแท่ง ระบบประเมินจากข้อมูลที่เปิดเผยแล้วเท่านั้น";
+    }
+
+    async function readFile(file) {
+      if (!file) return [];
+      return parseCSV(await file.text());
+    }
+
+    async function fetchCSV(path) {
+      const response = await fetch(path);
+      if (!response.ok) throw new Error(`โหลดไม่ได้: ${path}`);
+      return parseCSV(await response.text());
+    }
+
+    async function loadFolderDataset() {
+      try {
+        const [m5, m15, h1] = await Promise.all([
+          fetchCSV("XAUUSDm_M5_202601012305_202606021250.csv"),
+          fetchCSV("XAUUSDm_M15_202601012300_202606021245.csv"),
+          fetchCSV("XAUUSDm_H1_202601012300_202606021200.csv")
+        ]);
+
+        if (!m5.length || !m15.length || !h1.length) {
+          throw new Error("อ่านข้อมูลไม่ครบ");
+        }
+
+        loadDataset(m5, m15, h1);
+        els.overlayNote.textContent = `โหลดข้อมูลจริงแล้ว: M5 ${m5.length} แท่ง | M15 ${m15.length} แท่ง | H1 ${h1.length} แท่ง`;
+      } catch (err) {
+        els.overlayNote.textContent = err.message;
+        alert(err.message);
+      }
+    }
+
+    function drawChart(signal) {
+      const canvas = els.chart;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(640, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(360, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      if (!state.m5.length) {
+        ctx.fillStyle = "#68727d";
+        ctx.font = "16px Segoe UI";
+        ctx.fillText("Load CSV or Demo", 24, 38);
+        return;
+      }
+
+      const chartSeries = getChartSeries();
+      const chartSource = chartSeries.source;
+      state.chartPan = Math.max(0, Math.min(state.chartPan, chartSeries.cursor));
+      const endIndex = Math.max(0, chartSeries.cursor - state.chartPan);
+      const visibleCount = Math.max(24, Math.min(state.chartView, endIndex + 1));
+      const start = Math.max(0, endIndex - visibleCount + 1);
+      const candles = chartSource.slice(start, endIndex + 1);
+      const extras = [signal && signal.fibo ? Object.values(signal.fibo).filter(Number.isFinite) : []].flat();
+      if (state.openTrade) extras.push(state.openTrade.entry, state.openTrade.sl, state.openTrade.tp);
+      const hi = Math.max(...candles.map(c => c.h), ...extras);
+      const lo = Math.min(...candles.map(c => c.l), ...extras);
+      const pad = Math.max(2, (hi - lo) * 0.12);
+      const baseMin = lo - pad;
+      const baseMax = hi + pad;
+      const baseCenter = (baseMin + baseMax) / 2;
+      const baseRange = Math.max(0.01, baseMax - baseMin);
+      const range = baseRange * state.priceZoom;
+      const min = baseCenter - range / 2 + state.pricePan;
+      const max = baseCenter + range / 2 + state.pricePan;
+      const plot = { x: 10, y: 18, w: w - 84, h: h - 52 };
+      const priceAxis = { x: plot.x + plot.w, y: plot.y, w: 72, h: plot.h };
+      const timeAxis = { x: plot.x, y: plot.y + plot.h, w: plot.w, h: 34 };
+      const y = v => plot.y + (max - v) / (max - min) * plot.h;
+      const x = i => plot.x + i / Math.max(1, candles.length - 1) * plot.w;
+
+      ctx.fillStyle = "#dce7ec";
+      ctx.font = "700 12px Segoe UI";
+      ctx.fillText(`${chartSeries.tf} chart`, plot.x + 8, plot.y + 16);
+
+      ctx.strokeStyle = "rgba(190,205,214,.16)";
+      ctx.lineWidth = 1;
+      ctx.font = "11px Segoe UI";
+      ctx.fillStyle = "#a7b3ba";
+      for (let i = 0; i <= 5; i++) {
+        const yy = plot.y + plot.h * i / 5;
+        ctx.beginPath();
+        ctx.moveTo(plot.x, yy);
+        ctx.lineTo(plot.x + plot.w, yy);
+        ctx.stroke();
+        const price = max - (max - min) * i / 5;
+        ctx.fillText(price.toFixed(2), priceAxis.x + 8, yy + 4);
+      }
+
+      for (let i = 0; i <= 8; i++) {
+        const xx = plot.x + plot.w * i / 8;
+        ctx.beginPath();
+        ctx.moveTo(xx, plot.y);
+        ctx.lineTo(xx, plot.y + plot.h);
+        ctx.stroke();
+        const idx = Math.min(candles.length - 1, Math.max(0, Math.round((candles.length - 1) * i / 8)));
+        const label = String(candles[idx]?.t || "").slice(11, 16);
+        ctx.fillStyle = "#a7b3ba";
+        ctx.fillText(label, xx - 14, timeAxis.y + 22);
+      }
+
+      ctx.strokeStyle = "#2d404a";
+      ctx.beginPath();
+      ctx.moveTo(priceAxis.x, plot.y);
+      ctx.lineTo(priceAxis.x, plot.y + plot.h);
+      ctx.moveTo(plot.x, timeAxis.y);
+      ctx.lineTo(plot.x + plot.w, timeAxis.y);
+      ctx.stroke();
+
+      function line(price, color, label, dash = []) {
+        if (!Number.isFinite(price)) return;
+        const yy = y(price);
+        ctx.save();
+        ctx.setLineDash(dash);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(plot.x, yy);
+        ctx.lineTo(plot.x + plot.w, yy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.fillText(label, plot.x + 8, yy - 5);
+        ctx.restore();
+      }
+
+      if (signal && signal.fibo) {
+        line(signal.fibo.fibo38, "#c9971a", "38.2", [4, 4]);
+        line(signal.fibo.fibo50, "#275f9f", "50", [4, 4]);
+        line(signal.fibo.fibo61, "#d8832f", "61.8", [4, 4]);
+        line(signal.fibo.fibo78, "#6d5fb5", "78.6", [4, 4]);
+        line(signal.fibo.fibo88, "#8b4d85", "88.6", [4, 4]);
+      }
+
+      if (state.openTrade) {
+        line(state.openTrade.entry, "#275f9f", "ENTRY", [8, 5]);
+        line(state.openTrade.tp, "#148a62", "TP", [8, 5]);
+        line(state.openTrade.sl, "#c74747", "SL", [8, 5]);
+      }
+
+      const cw = Math.max(3, plot.w / candles.length * 0.62);
+      candles.forEach((c, i) => {
+        const xx = x(i);
+        const up = c.c >= c.o;
+        ctx.strokeStyle = up ? "#148a62" : "#c74747";
+        ctx.fillStyle = up ? "#148a62" : "#c74747";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(xx, y(c.h));
+        ctx.lineTo(xx, y(c.l));
+        ctx.stroke();
+        const top = y(Math.max(c.o, c.c));
+        const bodyH = Math.max(1, Math.abs(y(c.o) - y(c.c)));
+        ctx.fillRect(xx - cw / 2, top, cw, bodyH);
+      });
+
+      if (state.crosshair) {
+        const cx = Math.max(plot.x, Math.min(plot.x + plot.w, state.crosshair.x));
+        const cy = Math.max(plot.y, Math.min(plot.y + plot.h, state.crosshair.y));
+        const priceAtCursor = max - ((cy - plot.y) / plot.h) * (max - min);
+        const candleIndex = Math.max(0, Math.min(candles.length - 1, Math.round((cx - plot.x) / plot.w * (candles.length - 1))));
+        const timeText = candles[candleIndex] ? candles[candleIndex].t : "";
+
+        ctx.save();
+        ctx.setLineDash([3, 4]);
+        ctx.strokeStyle = "rgba(235,244,248,.62)";
+        ctx.beginPath();
+        ctx.moveTo(plot.x, cy);
+        ctx.lineTo(plot.x + plot.w, cy);
+        ctx.moveTo(cx, plot.y);
+        ctx.lineTo(cx, plot.y + plot.h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#dce7ec";
+        ctx.fillRect(priceAxis.x + 2, cy - 11, priceAxis.w - 4, 22);
+        ctx.fillStyle = "#10191e";
+        ctx.font = "11px Segoe UI";
+        ctx.fillText(priceAtCursor.toFixed(2), priceAxis.x + 8, cy + 4);
+
+        ctx.fillStyle = "#dce7ec";
+        const labelW = 118;
+        const tx = Math.max(plot.x, Math.min(plot.x + plot.w - labelW, cx - labelW / 2));
+        ctx.fillRect(tx, timeAxis.y + 4, labelW, 22);
+        ctx.fillStyle = "#10191e";
+        ctx.fillText(String(timeText).slice(0, 16), tx + 8, timeAxis.y + 19);
+        ctx.restore();
+      }
+    }
+
+    function setKV(container, rows) {
+      container.innerHTML = rows.map(([k, v]) => `<div>${k}</div><div>${v}</div>`).join("");
+    }
+
+    function render() {
+      const signal = evaluateSignal();
+      state.lastSignal = signal;
+      drawChart(signal);
+      els.tfButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tf === state.chartTimeframe);
+      });
+
+      const current = state.m5[state.cursor];
+      const floatingProfit = state.openTrade && current ? calcTradeProfit(state.openTrade, current.c) : 0;
+      const equityNow = state.balance + floatingProfit;
+      state.peakEquity = Math.max(state.peakEquity || equityNow, equityNow);
+      updateRiskHalt();
+      const ddNow = state.peakEquity > 0 ? ((state.peakEquity - equityNow) / state.peakEquity) * 100 : 0;
+      els.timeline.value = String(state.cursor);
+      els.cursorPill.textContent = `Candle ${state.cursor + 1} / ${state.m5.length}`;
+      els.pricePill.textContent = current ? `Price ${current.c.toFixed(2)}` : "Price -";
+      els.balancePill.textContent = `Balance ${money(state.balance)}`;
+      els.equityValuePill.textContent = `Equity ${money(equityNow)}`;
+      els.timeLabel.textContent = current ? current.t : "ยังไม่โหลดข้อมูล";
+      els.leftTime.textContent = state.m5[0] ? state.m5[0].t : "-";
+      els.rightTime.textContent = current ? current.t : "-";
+
+      const wins = state.trades.filter(t => t.result === "WIN").length;
+      const losses = state.trades.filter(t => t.result === "LOSS").length;
+      const totalProfit = state.trades.reduce((sum, t) => sum + (t.profit || 0), 0);
+      els.equityPill.textContent = `Trades ${state.trades.length} | Win ${wins} | Loss ${losses} | P/L ${money(totalProfit)}`;
+
+      els.actionBox.className = "signal-action " + (signal.action === "BUY" ? "buy" : signal.action === "SELL" ? "sell" : "");
+      els.actionBox.querySelector("span").textContent = state.halted ? "HALT" : (signal.action || "NONE");
+      els.zoneTag.textContent = `ZONE ${signal.zone || "-"}`;
+      els.takeSignal.disabled = state.halted || !(signal.action === "BUY" || signal.action === "SELL");
+      els.scoreFill.style.width = `${Math.min(100, (signal.score || 0) * 10)}%`;
+      els.scoreFill.style.background = signal.action === "BUY" ? "var(--buy)" : signal.action === "SELL" ? "var(--sell)" : "var(--blue)";
+
+      setKV(els.signalKV, [
+        ["Score", `${signal.score || 0}/10`],
+        ["BUY / SELL", `${signal.buyScore || 0} / ${signal.sellScore || 0}`],
+        ["Trend", signal.upTrend ? "UP 1H" : signal.downTrend ? "DOWN 1H" : "SIDEWAY"],
+        ["RSI", signal.rsiVal != null ? signal.rsiVal.toFixed(2) : "-"],
+        ["Momentum", signal.mom != null ? signal.mom.toFixed(2) : "-"],
+        ["Reaction", signal.rejectionBuy ? "BUY" : signal.rejectionSell ? "SELL" : "NO"],
+        ["Sideway", signal.sidewayMarket ? "YES" : "NO"],
+        ["Volatility", signal.volatilityBlock ? "BLOCK" : "OK"],
+        ["BUY ติด", signal.buyReasons && signal.buyReasons.length ? signal.buyReasons.slice(0, 2).join(", ") : "ผ่าน"],
+        ["SELL ติด", signal.sellReasons && signal.sellReasons.length ? signal.sellReasons.slice(0, 2).join(", ") : "ผ่าน"]
+      ]);
+
+      if (state.openTrade) {
+        const t = state.openTrade;
+        setKV(els.tradeKV, [
+          ["Type", t.type],
+          ["Entry", t.entry.toFixed(2)],
+          ["TP", t.tp.toFixed(2)],
+          ["SL", t.sl.toFixed(2)],
+          ["Lot", t.lot.toFixed(2)],
+          ["Risk", money(t.riskMoney)],
+          ["Risk Mode", t.overRisk ? "OVER RISK" : "OK"],
+          ["Floating", money(floatingProfit)],
+          ["Opened", t.entryTime],
+          ["Equity", money(equityNow)]
+        ]);
+      } else {
+        setKV(els.tradeKV, [
+          ["Status", state.halted ? `HALTED: ${state.haltReason}` : "NO POSITION"],
+          ["Balance", money(state.balance)],
+          ["Equity", money(equityNow)],
+          ["Peak", money(state.peakEquity)],
+          ["DD", `${ddNow.toFixed(1)}%`],
+          ["Loss Streak", state.consecutiveLosses]
+        ]);
+      }
+
+      els.logBody.innerHTML = state.trades.slice(-14).reverse().map((t, i) => `
+        <tr>
+          <td>${state.trades.length - i}</td>
+          <td>${t.type}</td>
+          <td>${t.entry.toFixed(2)}</td>
+          <td>${t.exit.toFixed(2)}</td>
+          <td>${t.result}<br>${money(t.profit)}</td>
+        </tr>
+      `).join("");
+      els.emptyLog.style.display = state.trades.length ? "none" : "block";
+
+      const bottomRows = [];
+      if (state.openTrade) {
+        bottomRows.push(`
+          <tr>
+            <td>${state.openTrade.entryTime}</td>
+            <td>${state.openTrade.type}</td>
+            <td>${state.openTrade.entry.toFixed(2)}</td>
+            <td>${state.openTrade.tp.toFixed(2)}</td>
+            <td>${state.openTrade.sl.toFixed(2)}</td>
+            <td>OPEN</td>
+            <td>${money(floatingProfit)}</td>
+            <td>${money(equityNow)}</td>
+          </tr>
+        `);
+      }
+      state.trades.slice(-5).reverse().forEach(t => {
+        bottomRows.push(`
+          <tr>
+            <td>${t.exitTime}</td>
+            <td>${t.type}</td>
+            <td>${t.entry.toFixed(2)}</td>
+            <td>${t.tp.toFixed(2)}</td>
+            <td>${t.sl.toFixed(2)}</td>
+            <td>${t.result}</td>
+            <td>${money(t.profit)}</td>
+            <td>${money(t.balanceAfter)}</td>
+          </tr>
+        `);
+      });
+      els.bottomLogBody.innerHTML = bottomRows.length
+        ? bottomRows.join("")
+        : `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px">ยังไม่มีสถานะการเทรด</td></tr>`;
+    }
+
+    els.demoData.addEventListener("click", () => {
+      const m5 = makeDemoData();
+      loadDataset(m5, aggregate(m5, 3), aggregate(m5, 12));
+    });
+
+    els.loadFiles.addEventListener("click", async () => {
+      const m5 = await readFile(els.m5File.files[0]);
+      if (!m5.length) {
+        alert("กรุณาเลือกไฟล์ M5 CSV ก่อน");
+        return;
+      }
+      const m15 = await readFile(els.m15File.files[0]);
+      const h1 = await readFile(els.h1File.files[0]);
+      loadDataset(m5, m15, h1);
+    });
+    els.loadFolderData.addEventListener("click", loadFolderDataset);
+
+    els.prevBtn.addEventListener("click", () => step(-1));
+    els.nextBtn.addEventListener("click", () => step(1));
+    els.playBtn.addEventListener("click", togglePlay);
+    els.quickPrev.addEventListener("click", () => step(-1));
+    els.quickNext.addEventListener("click", () => step(1));
+    els.quickAuto.addEventListener("click", togglePlay);
+    els.quickZoomOut.addEventListener("click", () => zoomChart(1.25));
+    els.quickZoomIn.addEventListener("click", () => zoomChart(0.8));
+    els.quickFit.addEventListener("click", fitChart);
+    els.quickFind.addEventListener("click", findNextSignal);
+    els.tfButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.chartTimeframe = btn.dataset.tf || "M5";
+        state.chartPan = 0;
+        state.priceZoom = 1;
+        state.pricePan = 0;
+        render();
+      });
+    });
+    els.resetBtn.addEventListener("click", () => resetReplay(80));
+    els.randomStart.addEventListener("click", () => {
+      if (!state.m5.length) return;
+      resetReplay(600 + Math.floor(Math.random() * Math.max(1, state.m5.length - 700)));
+    });
+    els.findSignal.addEventListener("click", findNextSignal);
+    els.timeline.addEventListener("input", () => {
+      state.cursor = Math.max(60, Number(els.timeline.value));
+      updateOpenTrade();
+      render();
+    });
+    els.takeBuy.addEventListener("click", () => openTrade("BUY"));
+    els.takeSell.addEventListener("click", () => openTrade("SELL"));
+    els.takeSignal.addEventListener("click", () => {
+      if (state.lastSignal && (state.lastSignal.action === "BUY" || state.lastSignal.action === "SELL")) {
+        openTrade(state.lastSignal.action);
+      }
+    });
+
+    function syncSymbol(source) {
+      const value = String(source.value || "SYMBOL").trim();
+      els.symbolInput.value = value;
+      els.symbolInputTop.value = value;
+      state.symbol = value;
+      els.marketName.textContent = `${value} Replay`;
+      render();
+    }
+
+    els.symbolInput.addEventListener("input", () => syncSymbol(els.symbolInput));
+    els.symbolInputTop.addEventListener("input", () => syncSymbol(els.symbolInputTop));
+
+    function syncBalanceInput(source) {
+      const value = Number(source.value || 1000);
+      els.startBalance.value = value;
+      els.startBalanceTop.value = value;
+      if (!state.openTrade && state.trades.length === 0) {
+        state.balance = value;
+        state.peakEquity = value;
+        state.halted = false;
+        state.haltReason = "";
+        state.consecutiveLosses = 0;
+        render();
+      }
+    }
+
+    els.startBalance.addEventListener("input", () => syncBalanceInput(els.startBalance));
+    els.startBalanceTop.addEventListener("input", () => syncBalanceInput(els.startBalanceTop));
+
+    function bindFileName(input, label) {
+      input.addEventListener("change", () => {
+        label.textContent = input.files && input.files[0] ? input.files[0].name : "ยังไม่ได้เลือกไฟล์";
+      });
+    }
+
+    bindFileName(els.m5File, els.m5FileName);
+    bindFileName(els.m15File, els.m15FileName);
+    bindFileName(els.h1File, els.h1FileName);
+
+    els.chart.addEventListener("wheel", event => {
+      event.preventDefault();
+      const rect = els.chart.getBoundingClientRect();
+      const overPriceAxis = event.clientX > rect.right - 82;
+      const overTimeAxis = event.clientY > rect.bottom - 42;
+      if (overPriceAxis || event.shiftKey) {
+        state.priceZoom = Math.max(0.25, Math.min(6, state.priceZoom * (event.deltaY > 0 ? 1.15 : 0.87)));
+        render();
+      } else {
+        zoomChart(event.deltaY > 0 ? 1.15 : 0.87);
+      }
+    }, { passive: false });
+
+    els.chart.addEventListener("mousedown", event => {
+      const rect = els.chart.getBoundingClientRect();
+      const overPriceAxis = event.clientX > rect.right - 82;
+      const overTimeAxis = event.clientY > rect.bottom - 42;
+      state.draggingChart = true;
+      state.dragMode = overPriceAxis ? "priceScale" : overTimeAxis ? "timeScale" : "pan";
+      state.dragX = event.clientX;
+      state.dragY = event.clientY;
+      state.dragPanStart = state.chartPan;
+      state.dragPricePanStart = state.pricePan;
+      state.dragChartViewStart = state.chartView;
+      state.dragPriceZoomStart = state.priceZoom;
+      els.chart.style.cursor = "grabbing";
+    });
+
+    window.addEventListener("mousemove", event => {
+      const rect = els.chart.getBoundingClientRect();
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+      if (localX >= 0 && localX <= rect.width && localY >= 0 && localY <= rect.height) {
+        state.crosshair = { x: localX, y: localY };
+      }
+
+      if (!state.draggingChart) {
+        if (localX > rect.width - 82) els.chart.style.cursor = "ns-resize";
+        else if (localY > rect.height - 42) els.chart.style.cursor = "ew-resize";
+        else if (localX >= 0 && localX <= rect.width && localY >= 0 && localY <= rect.height) els.chart.style.cursor = "grab";
+        render();
+        return;
+      }
+
+      const pxPerCandle = rect.width / Math.max(1, state.chartView);
+      const deltaCandles = Math.round((event.clientX - state.dragX) / Math.max(2, pxPerCandle));
+      const dragSeries = getChartSeries();
+      const dragEnd = Math.max(0, dragSeries.cursor - state.chartPan);
+      const visible = dragSeries.source.slice(Math.max(0, dragEnd - state.chartView + 1), dragEnd + 1);
+      const visibleHi = visible.length ? Math.max(...visible.map(c => c.h)) : 1;
+      const visibleLo = visible.length ? Math.min(...visible.map(c => c.l)) : 0;
+      const pricePerPixel = Math.max(0.01, (visibleHi - visibleLo) * state.priceZoom / Math.max(1, rect.height));
+
+      if (state.dragMode === "priceScale") {
+        const factor = Math.exp((event.clientY - state.dragY) / 260);
+        state.priceZoom = Math.max(0.25, Math.min(8, state.dragPriceZoomStart * factor));
+      } else if (state.dragMode === "timeScale") {
+        const factor = Math.exp((event.clientX - state.dragX) / 260);
+        state.chartView = Math.max(24, Math.min(320, Math.round(state.dragChartViewStart * factor)));
+      } else {
+        state.chartPan = Math.max(0, Math.min(dragSeries.cursor, state.dragPanStart + deltaCandles));
+        state.pricePan = state.dragPricePanStart + (event.clientY - state.dragY) * pricePerPixel;
+      }
+      render();
+    });
+
+    window.addEventListener("mouseup", () => {
+      state.draggingChart = false;
+      state.dragMode = "";
+      els.chart.style.cursor = "";
+    });
+
+    els.chart.addEventListener("mouseleave", () => {
+      if (!state.draggingChart) {
+        state.crosshair = null;
+        render();
+      }
+    });
+
+    els.chart.addEventListener("dblclick", fitChart);
+
+    [...document.querySelectorAll("input")].forEach(el => el.addEventListener("change", render));
+    window.addEventListener("resize", render);
+    window.addEventListener("load", () => {
+      setTimeout(() => window.scrollTo({ top: 0, left: 0 }), 80);
+      setTimeout(() => window.scrollTo({ top: 0, left: 0 }), 450);
+    });
+
+    loadDataset(makeDemoData(), [], []);
+  </script>
+</body>
+</html>
+

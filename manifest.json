@@ -1,0 +1,46 @@
+{
+  "name": "INTAGE Workspace Hub",
+  "short_name": "INTAGE Hub",
+  "description": "INTAGE Workspace Hub for SSC, CATI Work Log, Audio Live, CATI AC System and Trade Simulator",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fbff",
+  "theme_color": "#dbeafe",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "SSC",
+      "short_name": "SSC",
+      "url": "https://script.google.com/macros/s/AKfycbwSfaw2bgEOciLgC6ownFi90CkENWWgjrTxBRCNlLFxEzXqNWaft87X6Etvz2xdF4d-/exec?page=portal"
+    },
+    {
+      "name": "CATI Work Log",
+      "short_name": "CATI WL",
+      "url": "https://script.google.com/macros/s/AKfycby6ZdttmFk72VgBcg0xLAj98rUpGc1ZeNenx2hcRc54J8hMEEyGHyluCP1bacxwT70KZw/exec?page=admin"
+    },
+    {
+      "name": "Audio Live",
+      "short_name": "Audio",
+      "url": "https://live-tran.netlify.app/"
+    },
+    {
+      "name": "CATI AC System",
+      "short_name": "CATI AC",
+      "url": "https://script.google.com/macros/s/AKfycbzeseDPFxWlMf9R_HDgsQERPIOwKYQg5QBrGfIVXmKXNNF1jphevsv79InR6jHc4iTZ/exec"
+    },
+    {
+      "name": "Trade Simulator",
+      "short_name": "Trade",
+      "url": "./trade-simulator.html"
+    }
+  ]
+}
