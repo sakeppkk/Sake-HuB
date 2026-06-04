@@ -103,7 +103,7 @@
         <button type="button" onclick="location.href='./index.html'">← Hub</button>
         <button type="button" onclick="goAppHome()">App Home</button>
       </div>
-      <div class="title"><strong id="title">SAKE HUB</strong><span id="url">Loading...</span></div>
+      <div class="title"><strong id="title">SAKE HUB</strong><span id="url" hidden></span></div>
       <div class="actions">
         <button type="button" onclick="reloadFrame()">Reload</button>
         <a id="openExternal" href="./index.html" target="_blank" rel="noopener noreferrer">Open external</a>
@@ -138,7 +138,7 @@
 
     document.title = `SAKE HUB - ${app.title}`;
     document.getElementById("title").textContent = app.title;
-    document.getElementById("url").textContent = app.url;
+    document.getElementById("url").textContent = "";
     document.getElementById("fallbackTitle").textContent = app.title;
     openExternal.href = app.url;
     fallbackOpen.href = app.url;
