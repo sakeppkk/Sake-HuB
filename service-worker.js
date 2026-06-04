@@ -1,4 +1,4 @@
-const CACHE_NAME = "intage-workspace-hub-v2";
+const CACHE_NAME = "sake-hub-v1";
 const ASSETS = [
   "./",
   "./index.html",
